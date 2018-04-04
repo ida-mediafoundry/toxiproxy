@@ -41,5 +41,5 @@ func (t *HttpToxic) Pipe(stub *ToxicStub) {
 }
 
 func init() {
-	toxics.Register("http", new(HttpToxic))
+	Register("http", new(HttpToxic))
 }
