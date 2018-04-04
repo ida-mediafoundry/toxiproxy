@@ -1,45 +1,23 @@
 package toxics
 
-import (
-	"bufio"
-	"bytes"
-	"io"
-	"net/http"
+// The NoopToxic passes all data through without any toxic effects.
+type NoopToxic struct{}
 
-	"github.com/Shopify/toxiproxy/stream"
-)
-
-type HttpToxic struct{}
-
-func (t *HttpToxic) ModifyResponse(resp *http.Response) {
-	resp.Header.Set("Location", "https://github.com/Shopify/toxiproxy")
-}
-
-func (t *HttpToxic) Pipe(stub *ToxicStub) {
-	buffer := bytes.NewBuffer(make([]byte, 0, 32*1024))
-	writer := stream.NewChanWriter(stub.Output)
-	reader := stream.NewChanReader(stub.Input)
-	reader.SetInterrupt(stub.Interrupt)
+func (t *NoopToxic) Pipe(stub *ToxicStub) {
 	for {
-		tee := io.TeeReader(reader, buffer)
-		resp, err := http.ReadResponse(bufio.NewReader(tee), nil)
-		if err == stream.ErrInterrupted {
-			buffer.WriteTo(writer)
+		select {
+		case <-stub.Interrupt:
 			return
-		} else if err == io.EOF {
-			stub.Close()
-			return
+		case c := <-stub.Input:
+			if c == nil {
+				stub.Close()
+				return
+			}
+			stub.Output <- c
 		}
-		if err != nil {
-			buffer.WriteTo(writer)
-		} else {
-			t.ModifyResponse(resp)
-			resp.Write(writer)
-		}
-		buffer.Reset()
 	}
 }
 
 func init() {
-	Register("http", new(HttpToxic))
+	Register("http", new(NoopToxic))
 }
