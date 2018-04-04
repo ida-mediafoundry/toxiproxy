@@ -1,4 +1,4 @@
-package main
+package toxics
 
 import (
 	"bufio"
@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/Shopify/toxiproxy/stream"
-	"github.com/Shopify/toxiproxy/toxics"
 )
 
 type HttpToxic struct{}
@@ -16,7 +15,7 @@ func (t *HttpToxic) ModifyResponse(resp *http.Response) {
 	resp.Header.Set("Location", "https://github.com/Shopify/toxiproxy")
 }
 
-func (t *HttpToxic) Pipe(stub *toxics.ToxicStub) {
+func (t *HttpToxic) Pipe(stub *ToxicStub) {
 	buffer := bytes.NewBuffer(make([]byte, 0, 32*1024))
 	writer := stream.NewChanWriter(stub.Output)
 	reader := stream.NewChanReader(stub.Input)
@@ -42,5 +41,5 @@ func (t *HttpToxic) Pipe(stub *toxics.ToxicStub) {
 }
 
 func init() {
-	toxics.Register("http", new(HttpToxic))
+	Register("http", new(HttpToxic))
 }
