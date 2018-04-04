@@ -70,7 +70,7 @@ docker:
 	docker build --tag="shopify/toxiproxy:git" .
 
 docker-release: linux
-	docker build --rm=true --tag="shopify/toxiproxy:$(VERSION)" .
-	docker tag shopify/toxiproxy:$(VERSION) shopify/toxiproxy:latest
-	docker push shopify/toxiproxy:$(VERSION)
-	docker push shopify/toxiproxy:latest
+	docker build --rm=true --tag="idamf/toxiproxy:$(VERSION)" .
+	docker tag idamf/toxiproxy:$(VERSION) idamf/toxiproxy:latest
+	docker push idamf/toxiproxy:$(VERSION)
+	docker push idamf/toxiproxy:latest
