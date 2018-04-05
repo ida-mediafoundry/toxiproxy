@@ -1,18 +1,47 @@
 package toxics
 
 import (
+    "math/rand"
 	"bufio"
 	"bytes"
 	"io"
+    "io/ioutil"
 	"net/http"
+    "encoding/json"
 
 	"github.com/Shopify/toxiproxy/stream"
 )
 
-type HttpToxic struct{}
+type HttpToxic struct{
+    Location string `json:"location"`
+}
+
+type HttpToxicResponseBody struct {
+    Status  int     `json:"status"`
+    Message string  `json:"message"`
+}
 
 func (t *HttpToxic) ModifyResponse(resp *http.Response) {
-	resp.Header.Set("Location", "https://github.com/Shopify/toxiproxy")
+    location := t.Location
+    body := &HttpToxicResponseBody {}
+    doError := len(location) == 0 || rand.Intn(2) != 0
+
+    if doError {
+        body.Status = 500
+        body.Message = "500 Internal Server Error!"
+    } else {
+        body.Status = 302
+        body.Message = "302 Temporary redirect"
+        resp.Header.Set("Location", location)
+    }
+
+    bodyRes, _ := json.Marshal(body)
+    bodyStr := string(bodyRes)
+
+    resp.StatusCode = body.Status
+    resp.Status = body.Message
+    resp.ContentLength = int64(len(bodyStr))
+    resp.Body = ioutil.NopCloser(bytes.NewBufferString(bodyStr))
 }
 
 func (t *HttpToxic) Pipe(stub *ToxicStub) {
